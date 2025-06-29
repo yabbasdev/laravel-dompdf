@@ -13,7 +13,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\HeaderUtils;
-
+use ArPHP\I18N\Arabic;
 /**
  * A Laravel wrapper for Dompdf
  *
@@ -104,6 +104,12 @@ class PDF
     public function loadHTML(string $string, ?string $encoding = null): self
     {
         $string = $this->convertEntities($string);
+        $arabic = new Arabic();
+        $p = $arabic->arIdentify($string);
+        for ($i = count($p) - 1; $i >= 0; $i -= 2) {
+            $utf8ar = $arabic->utf8Glyphs(substr($string, $p[$i - 1], $p[$i] - $p[$i - 1]));
+            $string = substr_replace($string, $utf8ar, $p[$i - 1], $p[$i] - $p[$i - 1]);
+        }
         $this->dompdf->loadHtml($string, $encoding);
         $this->rendered = false;
         return $this;
